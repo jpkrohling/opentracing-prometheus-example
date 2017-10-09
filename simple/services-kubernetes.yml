@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: ordermgr
 spec:
-  replicas: 3
+  replicas: 1
   template:
     metadata:
       labels:
@@ -11,7 +11,7 @@ spec:
     spec:
       containers:
       - name: ordermgr 
-        image: demo/kubeotprom-ordermgr:0.0.1
+        image: jpkroehling/kubeotprom-ordermgr:0.0.1
         ports:
         - name: web
           containerPort: 8080
@@ -19,7 +19,7 @@ spec:
           - name: JAEGER_SERVICE_NAME
             value: ordermgr
           - name: JAEGER_AGENT_HOST
-            value: jaeger-agent
+            value: localhost
           - name: JAEGER_SAMPLER_TYPE
             value: const
           - name: JAEGER_SAMPLER_PARAM
@@ -32,6 +32,19 @@ spec:
             value: "http://accountmgr:8080"
           - name: OPENTRACING_METRICS_EXPORTER_HTTP_PATH
             value: "/metrics"
+      - image: jpkroehling/jaeger-agent:latest
+        name: jaeger-agent
+        ports:
+        - containerPort: 5775
+          protocol: UDP
+        - containerPort: 5778
+        - containerPort: 6831
+          protocol: UDP
+        - containerPort: 6832
+          protocol: UDP
+        command:
+        - "/go/bin/agent-linux"
+        - "--collector.host-port=jaeger-collector.default.svc.cluster.local:14267"
 ---
 kind: Service
 apiVersion: v1
@@ -67,7 +80,7 @@ kind: Deployment
 metadata:
   name: accountmgr
 spec:
-  replicas: 3
+  replicas: 1
   template:
     metadata:
       labels:
@@ -75,7 +88,7 @@ spec:
     spec:
       containers:
       - name: accountmgr 
-        image: demo/kubeotprom-accountmgr:0.0.1
+        image: jpkroehling/kubeotprom-accountmgr:0.0.1
         ports:
         - name: web
           containerPort: 8080
@@ -83,7 +96,7 @@ spec:
           - name: JAEGER_SERVICE_NAME
             value: accountmgr
           - name: JAEGER_AGENT_HOST
-            value: jaeger-agent
+            value: localhost
           - name: JAEGER_SAMPLER_TYPE
             value: const
           - name: JAEGER_SAMPLER_PARAM
@@ -94,6 +107,19 @@ spec:
             value: "version=${VERSION}"
           - name: OPENTRACING_METRICS_EXPORTER_HTTP_PATH
             value: "/metrics"
+      - image: jpkroehling/jaeger-agent:latest
+        name: jaeger-agent
+        ports:
+        - containerPort: 5775
+          protocol: UDP
+        - containerPort: 5778
+        - containerPort: 6831
+          protocol: UDP
+        - containerPort: 6832
+          protocol: UDP
+        command:
+        - "/go/bin/agent-linux"
+        - "--collector.host-port=jaeger-collector.default.svc.cluster.local:14267"
 ---
 kind: Service
 apiVersion: v1
